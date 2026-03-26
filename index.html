@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pakistan Sports Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f; --surface:#11111a; --card:#181825; --border:#2a2a40;
+    --green:#00e676; --yellow:#ffd600; --red:#ff4444;
+    --text:#e8e8f0; --muted:#6b6b8a;
+    --cricket:#00c853; --soccer:#2979ff; --tennis:#ff6d00;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+  header{padding:24px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:linear-gradient(180deg,#0d0d1a,transparent);}
+  .logo h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,6vw,40px);letter-spacing:3px;color:#fff;}
+  .logo h1 span{color:var(--green);}
+  .logo p{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:3px;text-transform:uppercase;}
+  .right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+  .clock{font-family:'DM Mono',monospace;font-size:20px;color:var(--green);font-weight:500;}
+  .datestr{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;}
+  .btn{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;padding:7px 16px;cursor:pointer;text-transform:uppercase;transition:all .2s;border-radius:2px;}
+  .btn:hover{background:var(--green);color:#000;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn svg{width:13px;height:13px;}
+  .btn.spin svg{animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .sbar{padding:8px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+  .dot.loading{background:var(--yellow);animation:pulse 1s infinite;}
+  .dot.error{background:var(--red);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .tabs{display:flex;padding:16px 24px 0;border-bottom:1px solid var(--border);}
+  .tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:9px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;}
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--text);}
+  .tab.active[data-d="today"]{border-bottom-color:var(--green);}
+  .tab.active[data-d="tomorrow"]{border-bottom-color:var(--yellow);}
+  .ddot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle;position:relative;top:-1px;}
+  .ddot.t{background:var(--green);} .ddot.m{background:var(--yellow);}
+  main{padding:22px 24px;max-width:960px;}
+  .panel{display:none;} .panel.active{display:block;}
+  .sec{margin-bottom:26px;}
+  .shead{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+  .sicon{font-size:18px;} .sname{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:3px;}
+  .sname.cricket{color:var(--cricket);} .sname.soccer{color:var(--soccer);} .sname.tennis{color:var(--tennis);}
+  .scnt{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface);padding:2px 8px;border-radius:20px;border:1px solid var(--border);}
+  .grid{display:flex;flex-direction:column;gap:8px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:12px 15px;display:grid;grid-template-columns:86px 1fr auto;gap:11px;align-items:center;transition:border-color .2s,transform .15s;animation:up .3s ease both;}
+  .card:hover{border-color:var(--muted);transform:translateX(2px);}
+  @keyframes up{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+  .mtime{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--green);text-align:center;line-height:1.3;}
+  .mtime .tz{display:block;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+  .mteams{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+  .mmeta{font-size:11px;color:var(--muted);line-height:1.4;}
+  .badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap;}
+  .bl{background:rgba(255,68,68,.15);color:var(--red);border:1px solid rgba(255,68,68,.3);animation:pulse 1.5s infinite;}
+  .bt{background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2);}
+  .bm{background:rgba(255,214,0,.08);color:var(--yellow);border:1px solid rgba(255,214,0,.2);}
+  .none{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);padding:14px;border:1px dashed var(--border);border-radius:4px;text-align:center;letter-spacing:1px;}
+  .skel{background:var(--card);border:1px solid var(--border);border-radius:5px;height:62px;margin-bottom:8px;position:relative;overflow:hidden;}
+  .skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);animation:sh 1.4s ease-in-out infinite;}
+  @keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .errbox{background:rgba(255,68,68,.06);border:1px solid rgba(255,68,68,.2);border-radius:5px;padding:16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--red);text-align:center;letter-spacing:1px;line-height:1.8;}
+  .dbtog{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:none;border:1px solid var(--border);padding:4px 11px;cursor:pointer;border-radius:3px;margin-top:9px;display:block;}
+  .dbtog:hover{color:var(--text);}
+  .dbbox{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;margin-top:7px;}
+  @media(max-width:560px){
+    header,main{padding:12px 14px;}
+    .tabs{padding:12px 14px 0;}
+    .card{grid-template-columns:70px 1fr;}
+    .badge{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>PAK <span>SPORTS</span> HQ</h1>
+    <p>Cricket &bull; Soccer &bull; Tennis &mdash; Pakistan Standard Time</p>
+  </div>
+  <div class="right">
+    <div class="clock" id="clk">--:--:--</div>
+    <div class="datestr" id="ds"></div>
+    <button class="btn" id="rbtn" onclick="load()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M23 4v6h-6M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+      REFRESH
+    </button>
+  </div>
+</header>
+
+<div class="sbar"><div class="dot loading" id="sdot"></div><span id="stxt">Loading...</span></div>
+
+<div class="tabs">
+  <button class="tab active" data-d="today" onclick="sw('today')"><span class="ddot t"></span>Today</button>
+  <button class="tab" data-d="tomorrow" onclick="sw('tomorrow')"><span class="ddot m"></span>Tomorrow</button>
+</div>
+
+<main>
+  <div class="panel active" id="p-today"><div id="c-today"></div></div>
+  <div class="panel" id="p-tomorrow"><div id="c-tomorrow"></div></div>
+</main>
+
+<script>
+const API = "https://api.anthropic.com/v1/messages";
+const pkt  = () => new Date(Date.now() + 5*3600000);
+const dStr = (off=0) => new Date(pkt().getTime()+off*86400000).toISOString().slice(0,10);
+const dDay = (off=0) => new Date(pkt().getTime()+off*86400000).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+const dow  = (s)     => new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'long'});
+
+function tickClock(){
+  const p=pkt();
+  document.getElementById('clk').textContent=[p.getUTCHours(),p.getUTCMinutes(),p.getUTCSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+  document.getElementById('ds').textContent=dDay(0);
+}
+setInterval(tickClock,1000); tickClock();
+
+function setS(state,txt){ document.getElementById('sdot').className='dot'+(state!=='ok'?' '+state:''); document.getElementById('stxt').textContent=txt; }
+function sw(d){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.querySelector(`.tab[data-d="${d}"]`).classList.add('active'); document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById(`p-${d}`).classList.add('active'); }
+function skels(id){ document.getElementById(id).innerHTML=Array(5).fill('<div class="skel"></div>').join(''); }
+
+function buildSection(sport,icon,matches,dk){
+  const cls=sport.toLowerCase(), n=(matches||[]).length;
+  const bc=dk==='today'?'bt':'bm', bt=dk==='today'?'Today':'Tomorrow';
+  let cards='';
+  if(!n){ cards=`<div class="none">No ${sport} matches scheduled</div>`; }
+  else {
+    (matches||[]).forEach((m,i)=>{
+      const live=m.status&&/live|ongoing|in.?progress/i.test(m.status);
+      const badge=live?`<span class="badge bl">● LIVE</span>`:`<span class="badge ${bc}">${bt}</span>`;
+      const meta=[m.tournament,m.venue,m.round].filter(Boolean).join(' · ');
+      cards+=`<div class="card" style="animation-delay:${i*.04}s">
+        <div class="mtime">${m.time_pkt||'TBD'}<span class="tz">PKT</span></div>
+        <div><div class="mteams">${m.teams||'TBD'}</div>${meta?`<div class="mmeta">${meta}</div>`:''}</div>
+        ${badge}
+      </div>`;
+    });
+  }
+  return `<div class="sec"><div class="shead"><span class="sicon">${icon}</span><span class="sname ${cls}">${sport.toUpperCase()}</span><span class="scnt">${n} match${n!==1?'es':''}</span></div><div class="grid">${cards}</div></div>`;
+}
+
+function renderDay(data,dk,cid){
+  document.getElementById(cid).innerHTML=
+    buildSection('Cricket','🏏',data.cricket,dk)+
+    buildSection('Soccer','⚽',data.soccer,dk)+
+    buildSection('Tennis','🎾',data.tennis,dk);
+}
+
+function showErr(cid,msg,raw=''){
+  document.getElementById(cid).innerHTML=`
+    <div class="errbox">⚠ ${msg}</div>
+    ${raw?`<button class="dbtog" onclick="var d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none'">Show raw response ▾</button><div class="dbbox" style="display:none">${raw.replace(/</g,'&lt;').slice(0,2000)}</div>`:''}`;
+}
+
+async function load(){
+  const btn=document.getElementById('rbtn');
+  btn.classList.add('spin'); btn.disabled=true;
+  skels('c-today'); skels('c-tomorrow');
+  setS('loading','Searching live match schedules...');
+
+  const t=dStr(0), m=dStr(1);
+
+  const prompt=`You are a sports data assistant. Search the web thoroughly and return ALL professional matches for these two dates:
+DATE 1 — TODAY: ${t} (${dow(t)})
+DATE 2 — TOMORROW: ${m} (${dow(m)})
+
+━━━ CRICKET ━━━
+Search: "cricket matches ${t}", "cricket fixtures ${m}", "IPL schedule", "PSL schedule", "BBL schedule", "cricket today"
+Return ALL matches you find including:
+• International: Test matches, ODIs, T20 Internationals (any country)
+• IPL (Indian Premier League) — if season is active, show ALL games
+• PSL (Pakistan Super League) — if season is active, show ALL games  
+• BBL (Big Bash League), The Hundred, SA20, ILT20, CPL, LPL
+• County Championship, Ranji Trophy, Sheffield Shield, any domestic first-class
+• Women's international cricket and women's leagues
+There are ALWAYS cricket matches somewhere. Search hard.
+
+━━━ SOCCER / FOOTBALL ━━━
+Search: "Premier League fixtures ${t}", "La Liga ${t}", "Bundesliga ${t}", "Serie A ${t}", "Ligue 1 ${t}", "Champions League", "Europa League", "football matches today tomorrow"
+Return ALL matches including:
+• English Premier League — typically 8-10 games on a matchday
+• La Liga (Spain), Serie A (Italy), Bundesliga (Germany), Ligue 1 (France)
+• UEFA Champions League, Europa League, Conference League
+• FA Cup, Copa del Rey, Coppa Italia, DFB-Pokal
+• World Cup / Euro qualifiers, Nations League, international friendlies
+• MLS (USA), Saudi Pro League, Eredivisie, Liga Portugal, Scottish Premiership
+• J1 League (Japan), K League (Korea), A-League (Australia)
+Football leagues run almost every single day. List every match you find.
+
+━━━ TENNIS ━━━
+Search: "ATP tennis schedule ${t}", "WTA tennis ${t}", "tennis results today"
+Return ALL matches including:
+• Grand Slams (Australian Open Jan, Roland Garros May-Jun, Wimbledon Jun-Jul, US Open Aug-Sep)
+• ATP Masters 1000 events (Indian Wells, Miami, Madrid, Rome, Montreal, Cincinnati, Shanghai, Paris, etc.)
+• WTA 1000 and 500 events running in parallel
+• ATP 500 and ATP 250 events
+• WTA 500 and WTA 250 events
+• Davis Cup, Billie Jean King Cup tie matches
+There are always 2-4 ATP/WTA tournaments running simultaneously.
+
+━━━ TIME CONVERSION TO PKT (UTC+5) ━━━
+Convert every single match time to Pakistan Standard Time (PKT = UTC+5):
+• UTC/GMT 00:00 = PKT 05:00
+• UTC/GMT 10:00 = PKT 15:00
+• UTC/GMT 15:00 = PKT 20:00
+• BST (UK summer) = UTC+1, so BST 15:00 = PKT 19:00
+• IST (India) = UTC+5:30, so IST 19:30 = PKT 19:00
+• ET (US East) = UTC-5, so ET 12:00 = PKT 22:00
+• CT (US Central) = UTC-6, so CT 15:00 = PKT 02:00 AM next day
+• AEST (Australia East) = UTC+10, so AEST 19:45 = PKT 14:45
+
+Return ONLY valid JSON — absolutely no markdown fences, no explanation text before or after:
+{
+  "today": {
+    "cricket": [{"teams":"Team A vs Team B","time_pkt":"10:30 AM","tournament":"IPL 2026","venue":"Wankhede Stadium, Mumbai","round":"Match 14","status":"upcoming"}],
+    "soccer":  [{"teams":"Arsenal vs Chelsea","time_pkt":"11:00 PM","tournament":"Premier League","venue":"Emirates Stadium","round":"GW32","status":"upcoming"}],
+    "tennis":  [{"teams":"Djokovic vs Alcaraz","time_pkt":"8:00 PM","tournament":"Miami Open","venue":"Hard Rock Stadium","round":"QF","status":"upcoming"}]
+  },
+  "tomorrow": {
+    "cricket": [],
+    "soccer":  [],
+    "tennis":  []
+  }
+}`;
+
+  try {
+    const res = await fetch(API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    if(!res.ok){
+      const body=await res.text();
+      let hint='';
+      try{ hint=JSON.parse(body)?.error?.message||''; }catch(e){}
+      const is429=res.status===429;
+      throw new Error(is429
+        ? '429::Rate limit reached. Please wait 30–60 seconds then tap Refresh.'
+        : `${res.status}::${hint||body.slice(0,120)}`);
+    }
+
+    const data=await res.json();
+    const allText=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+
+    // Two-pass JSON extraction
+    const rx1=allText.match(/\{\s*"today"\s*:[\s\S]*?"tomorrow"\s*:[\s\S]*?\}\s*$/);
+    const rx2=allText.match(/\{\s*"today"\s*:[\s\S]*?"tomorrow"\s*:[\s\S]*/);
+    const raw=rx1?rx1[0]:(rx2?rx2[0]:null);
+
+    if(!raw){
+      showErr('c-today','Could not extract schedule data from response.',allText);
+      showErr('c-tomorrow','Could not extract schedule data from response.','');
+      setS('error','Parse error — see raw response');
+    } else {
+      let parsed;
+      try{ parsed=JSON.parse(raw); }
+      catch(e){
+        // Try trimming to last complete }
+        const trimmed=raw.slice(0,raw.lastIndexOf('}')+1);
+        try{ parsed=JSON.parse(trimmed); }
+        catch(e2){
+          showErr('c-today',`JSON error: ${e2.message}`,raw);
+          showErr('c-tomorrow','','');
+          setS('error','JSON parse failed');
+          btn.classList.remove('spin'); btn.disabled=false;
+          return;
+        }
+      }
+      renderDay(parsed.today||{},'today','c-today');
+      renderDay(parsed.tomorrow||{},'tomorrow','c-tomorrow');
+      const p=pkt();
+      const ts=[p.getUTCHours(),p.getUTCMinutes()].map(n=>String(n).padStart(2,'0')).join(':');
+      setS('ok',`Updated ${ts} PKT — refresh anytime`);
+    }
+
+  } catch(e){
+    const parts=e.message.split('::');
+    const is429=parts[0]==='429';
+    const msg=parts[parts.length-1];
+    showErr('c-today', msg, '');
+    showErr('c-tomorrow', '', '');
+    setS('error', is429 ? 'Rate limited — wait 30s & retry' : 'Error — tap Refresh to retry');
+  }
+
+  btn.classList.remove('spin'); btn.disabled=false;
+}
+
+load();
+</script>
+</body>
+</html>
